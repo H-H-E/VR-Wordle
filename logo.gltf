@@ -1,0 +1,142 @@
+{
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 75168,
+      "target": 34962,
+      "byteStride": 12
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 75168,
+      "byteLength": 25056,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 100224,
+      "byteLength": 75168,
+      "target": 34962,
+      "byteStride": 12
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 6264,
+      "max": [
+        23,
+        7,
+        71.802001953125
+      ],
+      "min": [
+        -29.270000457763672,
+        2.5,
+        0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5125,
+      "count": 6264,
+      "max": [
+        6263
+      ],
+      "min": [
+        0
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 6264,
+      "max": [
+        0.16862745098039217,
+        0.1803921568627451,
+        0.19215686274509805
+      ],
+      "min": [
+        0.16862745098039217,
+        0.1803921568627451,
+        0.19215686274509805
+      ],
+      "type": "VEC3"
+    }
+  ],
+  "asset": {
+    "version": "2.0",
+    "generator": "Autodesk.Tinkercad"
+  },
+  "materials": [
+    {
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0.5,
+        "roughnessFactor": 0.5
+      },
+      "name": "lambert2SG.001"
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "mode": 4,
+          "attributes": {
+            "POSITION": 0,
+            "COLOR_0": 2
+          },
+          "indices": 1,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        1
+      ],
+      "name": "Tinkercad GLTF Scene"
+    }
+  ],
+  "scene": 0,
+  "nodes": [
+    {
+      "name": "Mesh_Mesh_head_geo.001_lambert2SG.001",
+      "mesh": 0
+    },
+    {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        2.220446049250313e-16,
+        -1,
+        0,
+        0,
+        1,
+        2.220446049250313e-16,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "children": [
+        0
+      ]
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "logo_data.bin",
+      "byteLength": 175392
+    }
+  ]
+}
