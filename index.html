@@ -10,65 +10,69 @@
   <script src="https://rawgit.com/rdub80/aframe-gui/master/dist/aframe-gui.min.js"></script>
   <script type="text/javascript">
     AFRAME.registerComponent('backgroundButt', {
-    schema: {
-      default: ''
-    },
-    init() {
-      const sky = document.querySelector('a-sky');
-      var b = false
-      this.el.addEventListener('click', () => {
-        if (b) {
-          sky.setAttribute('src', "#egy");
-        } else {
-          sky.setAttribute('src', "#aurora");
-        }
-        b = !b;
-        console.log('clicked');
-      });
-    }
-  });
+      schema: {
+        default: ''
+      },
+      init() {
+        const sky = document.querySelector('a-sky');
+        var b = false
+        this.el.addEventListener('click', () => {
+          if (b) {
+            sky.setAttribute('src', "#egy");
+          } else {
+            sky.setAttribute('src', "#aurora");
+          }
+          b = !b;
+          console.log('clicked');
+        });
+      }
+    });
   </script>
 
 
-    <title>VRdle</title>
-    <style src="./style.css"></style>
-    <script src="./words.js"></script>
+  <title>VRdle</title>
+  <style src="./style.css"></style>
+  <script src="./words.js"></script>
+  <script src="./displacment-offset-shader.js"></script>
+
 
 
 </head>
 
 <body>
- 
-  
-  <a-scene id="scene" keyboard-controls="false" keyboard-shortcuts="enterVR: false" cursor="rayOrigin:mouse" keyboard >
+
+
+  <a-scene id="scene" keyboard-controls="false" keyboard-shortcuts="enterVR: false" cursor="rayOrigin:mouse" keyboard>
     <a-assets>
       <model id="model" src="VRdle/logoc.gltf" />
-      
-    
+
+
       <img id="egy" src="./assets/images/egypt.jpeg">
+      <img id="sky" src="./assets/images/sky.jpeg">
       <img id="rules" src="./assets/images/rule.png">
       <a-asset-item id="optimerBoldFont"
         src="https://rawgit.com/mrdoob/three.js/dev/examples/fonts/optimer_bold.typeface.json"></a-asset-item>
-      
+
     </a-assets>
     <!-- environment -->
-    
 
-    <a-sky  id="skybox" src="#egy"></a-sky>
+
+    <a-sky id="skybox" src="#sky"></a-sky>
     <!-- wordle board -->
-    
 
-    <a-entity id="logo" scale="4 4 4" position="4.5 4 -1.5" rotation="0 -90 0" text-geometry="value:Poiesis; size:0.15; font: #optimerBoldFont;">
-    material="color:beige; metalness:0.9;">
-      <a-entity id="logoline2" position="0 -.2 0" text-geometry="value:Education; size:0.15"material="color:orange; metalness: .4; roughness: 0.8;" ></a-entity>
+
+    <a-entity id="logo" scale="4 4 4" position="4.5 4 -1.5" rotation="0 -90 0"
+      text-geometry="value:Poiesis; size:0.15; font: #optimerBoldFont;" >
+      <a-entity id="logoline2" position="0 -.2 0" text-geometry="value:Education; size:0.15"
+        material="color:orange; metalness: .4; roughness: 0.8;"></a-entity>
     </a-entity>
 
     <a-camera position="0.05 1.42 0.7" wasd-controls-enabled="false" far="20000" near="0.005"></a-camera>
-    <a-entity id="ruleplane" geometry="primitive: plane; height: 1.8; width: 1.8" rotation="-90.00021045914971 0 0" material="src:#rules"></a-entity>
+    <a-entity id="ruleplane" geometry="primitive: plane; height: 1.8; width: 1.8" rotation="-90.00021045914971 0 0"
+      material="src:#rules"></a-entity>
     <a-entity id="row1" position="0.15 1.25 -1" rotation="10">
       <a-entity class="charDisplay" position="-0.5 2 -1.5" text-geometry="value:; size:0.15"
         material="color:; metalness:0.9;">
-        <a-plane width=".5" height=".5"   ></a-plane>
       </a-entity>
       <a-entity class="charDisplay" position="-0.35 2 -1.5" text-geometry="value:; size:0.15"
         material="color:; metalness:0.9;">
@@ -174,15 +178,27 @@
     <a-entity laser-controls="hand: right" raycaster="far: 100; lineColor: white;"></a-entity>
     <!-- keyboard -->
     <a-text id="victory" font="dejavu" color="#00d600" value="" scale="0.5 0.5 0.5" position="-0.221 1.2 -0.7"></a-text>
-    <a-entity id="input" position="-0.5 1.2 -0.7" text-geometry="value:; size:0.15" material="color:silver; metalness:0.9;">
+    <a-entity id="input" position="-0.5 1.2 -0.7" text-geometry="value:; size:0.15"
+      material="color:silver; metalness:0.9;">
     </a-entity>
     <a-entity id="keyboard" rotation="-45 0 0" scale="1.5 1.5 1.5" position="-0.3 1 -0.5" a-keyboard>
 
 
     </a-entity>
-    <a-entity id="rules" position="-0.5 1.2 -0.7" primitive="eplan" material="src:#rules">
 
-    <!-- Mouse input -->
+    <a-sphere material="shader:displacement-offset; color: #00d600; metalness: 0.9; roughness: 0.9;"" 
+                myoffset-updater
+                scale="1 1 1"
+                radius="0.2"
+                position="0 1.5 -2"
+                segments-height="128"
+                segments-width="128">
+        <a-animation attribute="scale" direction="alternate-reverse" dur="5000" from="1 1 1" to="4 4 4" repeat="indefinite"></a-animation>
+      </a-sphere>
+      
+    <a-entity id="rules" position="-0.5 1.2 -0.7" primitive="plane" material="src:#rules">
+
+      <!-- Mouse input -->
   </a-scene>
   <noscript>Please turn on Javascript to view this website.</noscript>
 
