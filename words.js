@@ -5902,7 +5902,7 @@ document.addEventListener('a-keyboard-update', updateInput)
 var skyboxIndex = 0;
     function backgroundChanger() {
         var skybox = document.querySelector('#skybox')
-        var skyboxArray = ['#aurora', '#egy', '#sky' ]
+        var skyboxArray = [ '#egy', '#sky' ]
         skybox.setAttribute('src', skyboxArray[skyboxIndex])
         if (skyboxIndex > skyboxArray.length) {
             skyboxIndex = 0
@@ -5919,6 +5919,8 @@ var skyboxIndex = 0;
 
     
     //setInterval(backgroundChanger, 10000)
+
+    
     
     //document.addEventListener("click", backgroundChanger)
 
