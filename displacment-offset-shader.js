@@ -159,8 +159,11 @@ void main() {
 varying float noise;
 
 void main() {
+  //this is the color of the object, to change it just change the color here by changing the vec3 color
 
-  vec3 color = vec3(1. - 2. * noise);
+  //vec3 color = vec3(1. - 2. * noise);
+  //changing it to the color of the sun
+  vec3 color = vec3(1., 0.8 * noise);
   gl_FragColor = vec4( color.rgb, 1.0 );
 
 }
