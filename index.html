@@ -60,20 +60,31 @@
     <!-- environment -->
 
 
-    <a-entity environment="preset: tron; 
-                          skyType: atmosphere;
+    <a-entity environment="preset: default; 
+                          skyType: none;
                           lighting: none;
                           shadow: false;
-                          lightPosition: 0 2.15 0;
-                          fog: 0.87;
+                          fog: 0.3;
                           ground: flat;
-                          groundColor: #0e172d;
-                          groundColor2: #0f2453;
+                          groundColor: #000000;
+                          groundColor2: #000000;
                           dressing: none;
-                          grid: 1x1;
-                          gridColor: #0e52b2;
-                          horizonColor: #284377;
-                          skyColor: #1a2236"></a-entity>
+                          grid: none"></a-entity>
+
+<a-sky color="#000000"></a-sky>
+
+<!-- Starfield -->
+<a-entity id="stars" position="0 0 0">
+  <a-sphere radius="100" segments-height="8" segments-width="8" material="shader: flat; side: back; color: #000000">
+    <a-entity rotation="0 0 0" scale="1 1 1">
+      <a-sphere radius="99.5" segments-height="64" segments-width="64" 
+                material="shader: flat; side: back; color: #000000; 
+                         src: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANJSURBVHic7ZpNaxNRFIafM5N0kphGW4tVUaRUQRBXuhJEEFz0D/gDKrp15Q+oCx0tVms7TfNBY5LaJE2bdpqkM+NikmY+7r0zd2Y6Cd4HZpE559z7vnPuvVnMgMViOVg4u02IxWKB1dXVi0qpS8aYs8aYk8aYqIjEgAhAwL9pDagAZaXUklJqwRjzxXXdz5lMprIXovGcEXrOzgBIJpM9QJ9S6rowxgEcAQEgBLQDEe/eKqA9hxvvvgqwDKwA34UQeRF5m06n816C4/F4RCk1KCL92JoQBjqBLs9OgE5sh0NeLFXvGQEWgAXP7lcR+ZjJZNZ3C7BjAZLJ5BURuSkiV40xRwXaxLuJhB0hBBwGeoEBpdSwMWZORN6k0+mvjWInEok+ERkWkUEROWaMiQJthI4qpY4rpU4ZY84AQyLySkRy09PTxe0BdiwAcBp4CDzCvZlEogBoPUcikfvADPBhC0AIGAIeAw+AXsFtiqIUCMi9wFXgI/DJdd3ZHTrgOM454DnwFOgVgUgE2tvbCQaDNBoNyuUy1WrVFxGlFNFolGAwSK1Wo1QqsbGx4Xc1jnvn3wHPUqnUu+YJPwEcx7kBvMR9liQUCtHf34/ruqytrTE3N0etVvNLjZaWFnp6eujq6qJYLJLP56nX637Vewi4BYw6jjOaSqVKzQJDwAvgHhAOBAIMDAxQr9eZn5+nXC77JUYLrusSj8cJh8Nks1nK5bJf9YaBK+JW3pfz+fw3XwGO4wwCr4EeEaGvrw9jDPl8Htd1/RKjTSwWIxKJkMvlqFarftUbAM55bfBNAMdxeoG3wEkRYXBwkEajQS6XMxIgkUgQCoXIZrM0Gg2/6u0DruE+YhkR2bkAjuP0AO+BE0ophoeHqdfrZLNZIwH6+/sJBoNks1m/HqEPgYvADeC1rwDecnYad6USERkaGqJWq5HP540EOHXqFMFgkIWFBb/WA73AGeAO8MZXgGQyeQR4B1wQEUZGRiiVSiwuLhoJ0Nvbi+M4zM/P+7UeOIb7L3ILeO8rQCKROA+MAVdEhNHRUYrFIktLS0YCdHd309HRQaFQYH193a96O3G/B8aByWZ/g5v/hFKp1Dfcz9EJYGZjY2N2bW3NWID19XWKxaLROkAImMD9HphoLmKxWA4+fwE1ZusZHR9wKQAAAABJRU5ErkJggg==;
+                         repeat: 1000 1000">
+      </a-sphere>
+    </a-entity>
+  </a-sphere>
+</a-entity>
     <!-- wordle board -->
 
 
