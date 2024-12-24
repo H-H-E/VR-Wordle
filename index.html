@@ -52,8 +52,14 @@
 
 <!-- Starfield -->
 <a-entity id="stars" position="0 0 0">
-  <a-sphere radius="100" segments-height="8" segments-width="8" material="shader: flat; side: back; color: #000000">
-
+  <a-sphere radius="100" segments-height="64" segments-width="64" material="shader: flat; side: back; color: #000000">
+    <a-entity position="0 0 0">
+      <a-sphere radius="99.9" segments-height="64" segments-width="64" 
+                material="shader: flat; side: back; color: #000000; opacity: 0.7">
+        <a-particle-system preset="stars" particleCount="2000" color="#FFF" randomize="true"></a-particle-system>
+      </a-sphere>
+    </a-entity>
+  </a-sphere>
 </a-entity>
     <!-- wordle board -->
 
