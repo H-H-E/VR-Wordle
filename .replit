@@ -1,5 +1,5 @@
 modules = ["nodejs-20", "web"]
-run = "npx http-server -p 8080"
+run = "npx http-server -p 8080 --host 0.0.0.0"
 [nix]
 channel = "stable-23_11"
 
