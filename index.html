@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimal-ui, viewport-fit=cover">
   <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
   <script src="./aframe-keyboard.min.js"></script>
+  <script src="./aframe-environment-component.min.js"></script>
   <script src="https://unpkg.com/aframe-text-geometry-component/dist/aframe-text-geometry-component.min.js"></script>
   <script src="https://rawgit.com/rdub80/aframe-gui/master/dist/aframe-gui.min.js"></script>
   <script type="text/javascript">
@@ -57,7 +58,7 @@
     <!-- environment -->
 
 
-    <a-sky id="skybox" src="#sky"></a-sky>
+    <a-entity environment="preset: tron; groundColor: #445; groundColor2: #667; grid: cross"></a-entity>
     <!-- wordle board -->
 
 
