@@ -10,24 +10,6 @@
   <script src="https://unpkg.com/aframe-text-geometry-component/dist/aframe-text-geometry-component.min.js"></script>
   <script src="https://rawgit.com/rdub80/aframe-gui/master/dist/aframe-gui.min.js"></script>
   <script type="text/javascript">
-    AFRAME.registerComponent('backgroundButt', {
-      schema: {
-        default: ''
-      },
-      init() {
-        const sky = document.querySelector('a-sky');
-        var b = false
-        this.el.addEventListener('click', () => {
-          if (b) {
-            sky.setAttribute('src', "#egy");
-          } else {
-            sky.setAttribute('src', "#aurora");
-          }
-          b = !b;
-          console.log('clicked');
-        });
-      }
-    });
   </script>
 
 
@@ -58,7 +40,7 @@
     <!-- environment -->
 
 
-    <a-entity environment="preset: tron; groundColor: #445; groundColor2: #667; grid: cross"></a-entity>
+    <a-entity environment="preset: dream; lightPosition: 1 5 -2; groundColor: #445; groundColor2: #667; grid: dots; dressingAmount: 500"></a-entity>
     <!-- wordle board -->
 
 
