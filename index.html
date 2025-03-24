@@ -28,19 +28,13 @@
   <a-scene id="scene" keyboard-controls="false" keyboard-shortcuts="enterVR: false" cursor="rayOrigin:mouse" keyboard>
     <a-assets>
       <model id="model" src="VRdle/logoc.gltf" />
-
-
-      <img id="egy" src="./assets/images/egypt.jpeg">
-      <img id="sky" src="./assets/images/sky.jpeg">
       <img id="rules" src="./assets/images/rule.png">
       <a-asset-item id="optimerBoldFont"
         src="https://rawgit.com/mrdoob/three.js/dev/examples/fonts/optimer_bold.typeface.json"></a-asset-item>
-
     </a-assets>
     <!-- environment -->
-
-
-    <a-entity environment="preset: dream; lightPosition: 1 5 -2; groundColor: #445; groundColor2: #667; grid: dots; dressingAmount: 500"></a-entity>
+    
+    <a-entity environment="preset: tron; skyType: atmosphere; lighting: distant; lightPosition: 1 5 -2; groundColor: #445; groundColor2: #667; grid: dots; dressingAmount: 500; ground: hills"></a-entity>
     <!-- wordle board -->
 
 
