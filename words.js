@@ -5898,28 +5898,20 @@ const WORDS = [
 
 document.addEventListener('a-keyboard-update', updateInput)
 
-// code below cycles between the different skyboxes 
-var skyboxIndex = 0;
-    function backgroundChanger() {
-        var skybox = document.querySelector('#skybox')
-        var skyboxArray = ['#aurora', '#egy', '#sky' ]
-        skybox.setAttribute('src', skyboxArray[skyboxIndex])
-        if (skyboxIndex > skyboxArray.length) {
-            skyboxIndex = 0
-        } else {
-            skyboxIndex++
-        }
-
-    
-
-
-
+// code below cycles between the different environment presets
+var presetIndex = 0;
+function backgroundChanger() {
+    var environment = document.querySelector('[environment]');
+    var presets = ['starry', 'egypt', 'forest', 'dream', 'volcano', 'tron'];
+    environment.setAttribute('environment', 'preset: ' + presets[presetIndex]);
+    presetIndex++;
+    if (presetIndex >= presets.length) {
+        presetIndex = 0;
     }
+}
 
+//setInterval(backgroundChanger, 10000)
 
-    
-    //setInterval(backgroundChanger, 10000)
-    
-    //document.addEventListener("click", backgroundChanger)
+//document.addEventListener("click", backgroundChanger)
 
 
