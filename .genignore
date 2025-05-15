@@ -1,0 +1,16 @@
+# Ignore files not useful for reading or LLM parsing
+.DS_Store
+Logo.zip
+logo_data.bin
+words.js
+
+# Optional: ignore large or redundant 3D models if not needed
+logo.glb
+logo.gltf
+logoc.gltf
+LogoScene.json.gltf
+
+# Optional: ignore large or irrelevant images
+*.jpeg
+*.jpg
+*.png
