@@ -5811,7 +5811,6 @@ const WORDS = [
             //if the user loses, tell the user they've lost and stop them from typing
             keyboard.parentNode.removeChild(keyboard)
             input = ''
-            document.querySelector('#input').setAttribute('value', "")
             document.querySelector('#victory').setAttribute('value', "The word was " + wordOfTheDay)
             document.querySelector('#victory').setAttribute('color', "#f04")
         } else {
@@ -5862,12 +5861,19 @@ const WORDS = [
                     }
                     //reset input
                     input = ''
-                    document.querySelector("#input").setAttribute("value", input)
+                    document.querySelector("#input").setAttribute("text-geometry", "value", input)
                 } else {
-                    //reset input and tell the user they're an idiot
+                    //reset input and show error message
                     input = ''
-                    document.querySelector('#input').setAttribute('text-geometry', "Not in word list")
-                    document.querySelector('#input').setAttribute('color', "#f04")
+                    document.querySelector('#input').setAttribute('text-geometry', {
+                        value: "Not in word list",
+                        size: 0.2
+                    })
+                    document.querySelector('#input').setAttribute('material', {
+                        color: "#f04",
+                        metalness: 0.9,
+                        emissive: "#222"
+                    })
                 }
                 return
             case 13:
@@ -5882,10 +5888,17 @@ const WORDS = [
                 }
                 break
         }
-        //ensure text color is black, and set text on input element
-        document.querySelector('#input').setAttribute('material', "color:gold; metalness:0.9; emissive:1;")
+        //ensure text displays properly, and set text on input element
+        document.querySelector('#input').setAttribute('material', {
+            color: "gold", 
+            metalness: 0.9, 
+            emissive: "#222"
+        })
         
-        document.querySelector('#input').setAttribute('text-geometry', "value", input)
+        document.querySelector('#input').setAttribute('text-geometry', {
+            value: input,
+            size: 0.2
+        })
     }
     /* Here is the explanation for the code above:
 1. We're using a switch statement to determine what key the user has pressed.
@@ -5903,7 +5916,18 @@ var presetIndex = 0;
 function backgroundChanger() {
     var environment = document.querySelector('[environment]');
     var presets = ['starry', 'egypt', 'forest', 'dream', 'volcano', 'tron'];
-    environment.setAttribute('environment', 'preset: ' + presets[presetIndex]);
+    var lightSettings = {
+        'starry': 'lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #b9d5ff; directionalColor: #ffffff; lightIntensity: 1.5; shadow: true;',
+        'egypt': 'lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #fff2cc; directionalColor: #ffffe0; lightIntensity: 1.5; shadow: true;',
+        'forest': 'lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #c9e6ca; directionalColor: #f5faf5; lightIntensity: 1.5; shadow: true;',
+        'dream': 'lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #e7d8f5; directionalColor: #ffffff; lightIntensity: 1.5; shadow: true;',
+        'volcano': 'lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #ff8c7a; directionalColor: #ffccaa; lightIntensity: 1.7; shadow: true;',
+        'tron': 'lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #01cdfe; directionalColor: #ffffff; lightIntensity: 1.6; shadow: true;'
+    };
+    
+    var currentPreset = presets[presetIndex];
+    environment.setAttribute('environment', 'preset: ' + currentPreset + '; ' + lightSettings[currentPreset]);
+    
     presetIndex++;
     if (presetIndex >= presets.length) {
         presetIndex = 0;

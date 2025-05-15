@@ -19,9 +19,9 @@
         var b = false
         this.el.addEventListener('click', () => {
           if (b) {
-            environment.setAttribute('environment', 'preset: egypt');
+            environment.setAttribute('environment', 'preset: egypt; lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #fff2cc; directionalColor: #ffffe0; lightIntensity: 1.5; shadow: true;');
           } else {
-            environment.setAttribute('environment', 'preset: starry');
+            environment.setAttribute('environment', 'preset: starry; lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #b9d5ff; directionalColor: #ffffff; lightIntensity: 1.5; shadow: true;');
           }
           b = !b;
           console.log('clicked');
@@ -56,141 +56,153 @@
 
     </a-assets>
     <!-- environment -->
-    <a-entity environment="preset: starry; playArea: 1.5; shadow: true;"></a-entity>
+    <a-entity environment="preset: starry; playArea: 1.5; shadow: true; lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #b9d5ff; directionalColor: #ffffff; lightIntensity: 1.5;"></a-entity>
+
+    <!-- Additional Lighting -->
+    <a-entity id="ambient-light" light="type: ambient; color: #b9d5ff; intensity: 0.5"></a-entity>
+    <a-entity id="main-directional-light" position="1 5 2" light="type: directional; color: #ffffff; intensity: 0.8; castShadow: true; shadowMapHeight: 1024; shadowMapWidth: 1024"></a-entity>
+    <a-entity id="keyboard-spot" position="-0.3 2 0" light="type: spot; color: #ffffff; intensity: 0.6; angle: 45; penumbra: 0.8; decay: 1; distance: 5; castShadow: true;"></a-entity>
+    <a-entity id="background-spot" position="3 2 0" light="type: spot; color: #ffe6cc; intensity: 0.4; angle: 60; penumbra: 0.5; decay: 1.5; distance: 10"></a-entity>
 
     <!-- wordle board -->
+    <!-- Container for the game board to position everything together -->
+    <a-entity id="game-container" position="0 1.55 -1.2" rotation="0 0 0">
 
-
-    <a-entity id="logo" scale="4 4 4" position="4.5 4 -1.5" rotation="0 -90 0"
-      text-geometry="value:Poiesis; size:0.15; font: #optimerBoldFont;" >
-      <a-entity id="logoline2" position="0 -.2 0" text-geometry="value:Education; size:0.15"
-        material="color:orange; metalness: .4; roughness: 0.8;"></a-entity>
-    </a-entity>
-
-    <a-camera position="0.05 1.42 0.7" wasd-controls-enabled="false" far="20000" near="0.005"></a-camera>
-    <a-entity id="ruleplane" geometry="primitive: plane; height: 1.8; width: 1.8" rotation="-90.00021045914971 0 0"
-      material="src:#rules"></a-entity>
-    <a-entity id="row1" position="0.15 1.25 -1" rotation="10">
-      <a-entity class="charDisplay" position="-0.5 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.35 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.2 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.05 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="0.1 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-    </a-entity>
-    <a-entity id="row2" position="0.15 1 -1" rotation="9.68">
-      <a-entity class="charDisplay" position="-0.5 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:blue; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.35 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.2 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="0.1 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="0.3 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
+      <a-entity id="logo" scale="3 3 3" position="4 3 0" rotation="0 -90 0"
+        text-geometry="value:Poiesis; size:0.15; font: #optimerBoldFont;" >
+        <a-entity id="logoline2" position="0 -.2 0" text-geometry="value:Education; size:0.15"
+          material="color:orange; metalness: .4; roughness: 0.8;"></a-entity>
       </a-entity>
 
+      <a-camera position="0.05 0 1.9" wasd-controls-enabled="false" far="20000" near="0.005"></a-camera>
+      <a-entity id="ruleplane" geometry="primitive: plane; height: 1.8; width: 1.8" rotation="-90.00021045914971 0 0" position="0 -1.55 0"
+        material="src:#rules"></a-entity>
+      
+      <!-- Wordle rows with optimized positions and increased letter size -->
+      <a-entity id="word-grid" position="-0.4 0.3 0" scale="1.2 1.2 1.2">
+        <a-entity id="row1" position="0 0.5 0" rotation="0 0 0">
+          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+        </a-entity>
+        <a-entity id="row2" position="0 0.25 0" rotation="0 0 0">
+          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
+            material="color:blue; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+        </a-entity>
+        <a-entity id="row3" position="0 0 0" rotation="0 0 0">
+          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+        </a-entity>
+        <a-entity id="row4" position="0 -0.25 0" rotation="0 0 0">
+          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+        </a-entity>
+        <a-entity id="row5" position="0 -0.5 0" rotation="0 0 0">
+          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+        </a-entity>
+        <a-entity id="row6" position="0 -0.75 0" rotation="0 0 0">
+          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
+            material="color:; metalness:0.9; emissive: #111;">
+          </a-entity>
+        </a-entity>
+      </a-entity>
+      
+      <!-- Text displays -->
+      <a-text id="victory" font="dejavu" color="#00d600" value="" scale="0.6 0.6 0.6" position="0.2 0.7 0.2"></a-text>
+      <a-entity id="input" position="0.2 0.65 0.1" text-geometry="value:; size:0.2"
+        material="color:gold; metalness:0.9; emissive: #222;">
+      </a-entity>
     </a-entity>
-    <a-entity id="row3" position="0.15 0.75 -1" rotation="9.28">
-      <a-entity class="charDisplay" position="-0.5 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.3 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.1 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="0.1 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="0.3 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-
-    </a-entity>
-    <a-entity id="row4" position="0.15 0.50 -1" rotation="11">
-      <a-entity class="charDisplay" position="-0.5 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.3 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.1 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="0.1 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="0.3 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-    </a-entity>
-    <a-entity id="row5" position="0.15 0.25 -1" rotation="9">
-      <a-entity class="charDisplay" position="-0.5 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.3 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.1 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="0.1 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="0.3 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-    </a-entity>
-    <a-entity id="row6" position="0.15 0 -1">
-      <a-entity class="charDisplay" position="-0.5 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.3 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="-0.1 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="0.1 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-      <a-entity class="charDisplay" position="0.3 2 -1.5" text-geometry="value:; size:0.15"
-        material="color:; metalness:0.9;">
-      </a-entity>
-    </a-entity>
+    
     <!-- VR -->
     <a-entity laser-controls="hand: right" raycaster="far: 100; lineColor: white;"></a-entity>
-    <!-- keyboard -->
-    <a-text id="victory" font="dejavu" color="#00d600" value="" scale="0.5 0.5 0.5" position="-0.221 1.2 -0.7"></a-text>
-    <a-entity id="input" position="-0.5 1.2 -0.7" text-geometry="value:; size:0.15"
-      material="color:silver; metalness:0.9;">
-    </a-entity>
-    <a-entity id="keyboard" rotation="-45 0 0" scale="1.5 1.5 1.5" position="-0.3 1 -0.5" a-keyboard>
-
-
+    
+    <!-- keyboard with improved position -->
+    <a-entity id="keyboard" rotation="-30 0 0" scale="1.8 1.8 1.8" position="0 0.95 -0.9" a-keyboard>
     </a-entity>
 
     <a-sphere material="shader:displacement-offset; color: #00d600; metalness: 0.9; roughness: 0.9;"" 
                 myoffset-updater
                 scale="1 1 1"
                 radius="0.2"
-                position="0 1.5 -2"
+                position="2.5 1.5 -2"
                 segments-height="128"
                 segments-width="128">
         <a-animation attribute="scale" direction="alternate-reverse" dur="5000" from="1 1 1" to="4 4 4" repeat="indefinite"></a-animation>
