@@ -17,8 +17,8 @@ AFRAME.registerComponent('backgroundButt', {
     
     // Apply the night theme on init to ensure proper settings
     setTimeout(() => {
-      if (typeof themeSwitch === 'function') {
-        themeSwitch('night');
+      if (typeof window.themeSwitch === 'function') {
+        window.themeSwitch('night');
       }
     }, 500);
     
@@ -32,14 +32,14 @@ AFRAME.registerComponent('backgroundButt', {
       const nextTheme = this.data.themes[this.currentThemeIndex];
       
       // Call themeSwitch from gui.js
-      if (typeof themeSwitch === 'function') {
-        themeSwitch(nextTheme);
+      if (typeof window.themeSwitch === 'function') {
+        window.themeSwitch(nextTheme);
         
         // Update index for next click
         this.currentThemeIndex = (this.currentThemeIndex + 1) % this.data.themes.length;
         console.log(`Ready to switch to: ${this.data.themes[this.currentThemeIndex]} next time`);
       } else {
-        console.error('themeSwitch function not found. Make sure gui.js is loaded before this component.');
+        console.error('window.themeSwitch function not found. Make sure the themeSwitch function is properly defined.');
       }
     } catch (error) {
       console.error('Error in backgroundButt click handler:', error);

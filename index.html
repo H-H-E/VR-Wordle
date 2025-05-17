@@ -6,6 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimal-ui, viewport-fit=cover">
   <!-- Load A-Frame first as it includes THREE.js -->
   <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script>
+    // Shim THREE.Math.generateUUID for aframe-particle-system
+    if (!THREE.Math) { THREE.Math = {}; }
+    THREE.Math.generateUUID = THREE.MathUtils.generateUUID;
+    
+    // Shim BufferGeometry.addAttribute for modern Three.js
+    THREE.BufferGeometry.prototype.addAttribute = function(name, attribute) {
+      return this.setAttribute(name, attribute);
+    };
+  </script>
   <!-- Remove explicit THREE.js import to avoid conflicts -->
   <!-- Load Troika dependencies before its A-Frame component -->
   <script src="https://cdn.jsdelivr.net/npm/troika-three-text@0.47.1/dist/troika-three-text.min.js"></script>
@@ -15,6 +25,51 @@
   <script src="https://unpkg.com/aframe-text-geometry-component/dist/aframe-text-geometry-component.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-gui@0.5.0/dist/aframe-gui.min.js"></script>
   <script src="https://unpkg.com/aframe-environment-component/dist/aframe-environment-component.min.js"></script>
+  <!-- FIRST_EDIT: add postprocessing, particle-system, and Tone.js libraries -->
+  <script src="https://unpkg.com/aframe-postprocessing@4.1.0/dist/aframe-postprocessing.min.js"></script>
+  <script src="https://unpkg.com/aframe-particle-system-component/dist/aframe-particle-system-component.min.js"></script>
+  <!-- Load Tone.js with appropriate error handling -->
+  <script>
+    // Preload Tone.js with error handling
+    function loadToneJS() {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/tone@14.7.77/build/Tone.js';
+        script.async = true;
+        script.onload = () => {
+          console.log("Tone.js loaded successfully");
+          resolve();
+        };
+        script.onerror = (err) => {
+          console.warn("Failed to load Tone.js:", err);
+          reject(err);
+        };
+        document.head.appendChild(script);
+      });
+    }
+    
+    // Start loading Tone.js right away
+    window.toneLoaded = loadToneJS().catch(err => {
+      console.warn("Tone.js failed to load from primary source, trying fallback...");
+      
+      // Try alternative CDN as fallback
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js';
+        script.async = true;
+        script.onload = () => {
+          console.log("Tone.js loaded successfully from fallback CDN");
+          resolve();
+        };
+        script.onerror = (err) => {
+          console.warn("Failed to load Tone.js from fallback CDN:", err);
+          console.warn("Audio will be disabled");
+          reject(err);
+        };
+        document.head.appendChild(script);
+      });
+    });
+  </script>
   
   <title>VRdle</title>
   <link rel="stylesheet" href="./style.css">
@@ -35,7 +90,7 @@
     <div id="loading-spinner"></div>
   </div>
 
-  <a-scene id="scene" keyboard-controls="false" keyboard-shortcuts="enterVR: false" cursor="rayOrigin:mouse" keyboard>
+  <a-scene id="scene" keyboard-controls="false" keyboard-shortcuts="enterVR: false" cursor="rayOrigin:mouse" keyboard postprocessing="bloom:{strength:0.8,radius:0.5,threshold:0.9};chromaticAberration:{offset:0.02};fxaa:true">
     <a-assets>
       <model id="model" src="assets/models/logoc.gltf" />
 
@@ -43,7 +98,7 @@
       <img id="sky" src="./assets/images/sky.jpeg">
       <img id="rules" src="./assets/images/rule.png">
       <a-asset-item id="optimerBoldFont"
-        src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/fonts/optimer_bold.typeface.json"></a-asset-item>
+        src="https://cdn.jsdelivr.net/npm/three@0.173.0/examples/fonts/optimer_bold.typeface.json"></a-asset-item>
 
     </a-assets>
     <!-- environment - properly configured -->
@@ -53,87 +108,105 @@
     <!-- <a-entity id="ambient-light" light="type: ambient; color: #0a1025; intensity: 0.25"></a-entity> -->
     <!-- <a-entity id="main-directional-light" position="1 5 2" light="type: directional; color: #2c4073; intensity: 0.5; castShadow: true; shadowMapHeight: 1024; shadowMapWidth: 1024"></a-entity> -->
 
-    <!-- wordle board -->
-    <!-- Container for the game board to position everything together -->
-    <a-entity id="game-container" position="0 1.55 -1.2" rotation="0 0 0">
-
-      <a-entity id="logo" scale="3 3 3" position="4 3 0" rotation="0 -90 0"
-        troika-text="value: Poiesis; fontSize: 0.15; color: #ffffff; font: https://cdn.jsdelivr.net/npm/three@0.147.0/examples/fonts/optimer_bold.typeface.json">
-        <a-entity id="logoline2" position="0 -.2 0" 
-          troika-text="value: Education; fontSize: 0.15; color: orange;"></a-entity>
-      </a-entity>
-
-      <a-camera position="0.05 0 1.9" wasd-controls-enabled="false" far="20000" near="0.005">
-        <a-entity cursor="fuse: false; rayOrigin: mouse" raycaster="objects: .clickable"></a-entity>
-      </a-camera>
-      
-      <!-- Tutorial button -->
-      <a-entity id="tutorial-button" position="2 0.1 0" rotation="0 0 0"
-                geometry="primitive: box; width: 0.3; height: 0.3; depth: 0.05" 
-                material="color: #2196F3; opacity: 0.9"
-                class="clickable"
-                onclick="document.getElementById('tutorial-modal').setAttribute('visible', true);">
-        <a-entity position="0 0 0.03" rotation="0 0 0" scale="1 1 1"
-                  troika-text="value: ?; color: white; fontSize: 0.2; align: center;"></a-entity>
-      </a-entity>
-      
-      <!-- Tutorial modal (hidden by default) -->
-      <a-entity id="tutorial-modal" visible="false" position="0 0 0.5">
+    <!-- Main UI group for centering board and keyboard together -->
+    <a-entity id="main-ui" position="0 1.5 -1.2" rotation="0 0 0">
+      <!-- wordle board -->
+      <a-entity id="game-container" position="0.14408 0 -5.68009" rotation="0 0 0">
+        <a-entity id="logo" scale="3 3 3" position="4 3 0" rotation="0 -90 0"
+          troika-text="value: Poiesis; fontSize: 0.15; color: #ffffff;">
+          <a-entity id="logoline2" position="0 -.2 0" 
+            troika-text="value: Education; fontSize: 0.15; color: orange;"></a-entity>
+        </a-entity>
+        <a-camera position="0.05 0 1.9" wasd-controls-enabled="false" far="20000" near="0.005" rotation="3.781521447863454 2.864788975654105 0">
+          <a-entity cursor="rayOrigin: mouse" raycaster="direction: -0.28533182148589675 0.39963499531215335 -0.8711358230318598; objects: .clickable; origin: 0.19408000000000003 1.5 -2.10228; useWorldCoordinates: true"></a-entity>
+        </a-camera>
+        <!-- Tutorial button -->
+        <a-entity id="tutorial-button" position="2 0.1 0" rotation="0 0 0"
+                  geometry="primitive: box; width: 0.3; height: 0.3; depth: 0.05" 
+                  material="color: #2196F3; opacity: 0.9"
+                  class="clickable"
+                  onclick="document.getElementById('tutorial-modal').setAttribute('visible', true);">
+          <a-entity position="0 0 0.03" rotation="0 0 0" scale="1 1 1"
+                    troika-text="value: ?; color: white; fontSize: 0.2; align: center;"></a-entity>
+        </a-entity>
+        <!-- Dark theme button -->
         <a-entity 
-          geometry="primitive: plane; width: 1.2; height: 1.4" 
-          material="color: #000; opacity: 0.85"
-          position="0 0 0">
-          <a-entity position="0 0.6 0.01" troika-text="value: How to Play:; color: #ffffff; fontSize: 0.08; align: center;"></a-entity>
-          <a-entity position="0 0.48 0.01" troika-text="value: 1. Guess the WORDLE in 6 tries.; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
-          <a-entity position="0 0.4 0.01" troika-text="value: 2. Each guess must be a valid 5-letter word.; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
-          <a-entity position="0 0.32 0.01" troika-text="value: 3. Color of the tiles will change to show; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
-          <a-entity position="0 0.24 0.01" troika-text="value: how close your guess was to the word.; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
-          <a-entity position="0 0.12 0.01" troika-text="value: GREEN: Letter is in the correct spot; color: #00d600; fontSize: 0.05; align: center;"></a-entity>
-          <a-entity position="0 0.04 0.01" troika-text="value: YELLOW: Letter is in the word but wrong spot; color: #ffcc00; fontSize: 0.05; align: center;"></a-entity>
-          <a-entity position="0 -0.04 0.01" troika-text="value: GREY: Letter is not in the word; color: #888888; fontSize: 0.05; align: center;"></a-entity>
-          
-          <!-- Close button -->
+          position="2 -0.3 0" 
+          rotation="0 0 0"
+          geometry="primitive: sphere; radius: 0.15; segmentsHeight: 16; segmentsWidth: 16" 
+          material="color: #9c27b0; metalness: 0.7; roughness: 0.3"
+          id="dark-theme-btn"
+          class="clickable"
+          onclick="cycleDarkThemes()">
+          <a-animation attribute="rotation" dur="10000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
+          <a-entity position="0 0 0.18" rotation="0 0 0" scale="0.4 0.4 0.4"
+                    troika-text="value: Dark; color: white; fontSize: 0.15; align: center;"></a-entity>
+        </a-entity>
+        <!-- Bright theme button -->
+        <a-entity 
+          position="2 -0.6 0" 
+          rotation="0 0 0"
+          geometry="primitive: sphere; radius: 0.15; segmentsHeight: 16; segmentsWidth: 16" 
+          material="color: #FFD700; metalness: 0.7; roughness: 0.3"
+          id="bright-theme-btn"
+          class="clickable"
+          onclick="setEnvironment('bright')">
+          <a-animation attribute="rotation" dur="10000" to="0 -360 0" repeat="indefinite" easing="linear"></a-animation>
+          <a-entity position="0 0 0.18" rotation="0 0 0" scale="0.4 0.4 0.4"
+                    troika-text="value: Bright; color: white; fontSize: 0.15; align: center;"></a-entity>
+        </a-entity>
+        <!-- Tutorial modal (hidden by default) -->
+        <a-entity id="tutorial-modal" visible="false" position="0 0 0.5">
           <a-entity 
-            position="0.5 0.6 0.01" 
-            geometry="primitive: circle; radius: 0.05" 
-            material="color: #f44336"
-            class="clickable"
-            onclick="document.getElementById('tutorial-modal').setAttribute('visible', false);">
-            <a-entity position="0 0 0.01" troika-text="value: X; color: white; fontSize: 0.05; align: center;"></a-entity>
+            geometry="primitive: plane; width: 1.2; height: 1.4" 
+            material="color: #000; opacity: 0.85"
+            position="0 0 0">
+            <a-entity position="0 0.6 0.01" troika-text="value: How to Play:; color: #ffffff; fontSize: 0.08; align: center;"></a-entity>
+            <a-entity position="0 0.48 0.01" troika-text="value: 1. Guess the WORDLE in 6 tries.; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
+            <a-entity position="0 0.4 0.01" troika-text="value: 2. Each guess must be a valid 5-letter word.; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
+            <a-entity position="0 0.32 0.01" troika-text="value: 3. Color of the tiles will change to show; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
+            <a-entity position="0 0.24 0.01" troika-text="value: how close your guess was to the word.; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
+            <a-entity position="0 0.12 0.01" troika-text="value: GREEN: Letter is in the correct spot; color: #00d600; fontSize: 0.05; align: center;"></a-entity>
+            <a-entity position="0 0.04 0.01" troika-text="value: YELLOW: Letter is in the word but wrong spot; color: #ffcc00; fontSize: 0.05; align: center;"></a-entity>
+            <a-entity position="0 -0.04 0.01" troika-text="value: GREY: Letter is not in the word; color: #888888; fontSize: 0.05; align: center;"></a-entity>
+            
+            <!-- Close button -->
+            <a-entity 
+              position="0.5 0.6 0.01" 
+              geometry="primitive: circle; radius: 0.05" 
+              material="color: #f44336"
+              class="clickable"
+              onclick="document.getElementById('tutorial-modal').setAttribute('visible', false);">
+              <a-entity position="0 0 0.01" troika-text="value: X; color: white; fontSize: 0.05; align: center;"></a-entity>
+            </a-entity>
           </a-entity>
         </a-entity>
+        <!-- Wordle rows with dynamically generated grid -->
+        <a-entity id="word-grid" position="0 0.3 0" scale="1.2 1.2 1.2" wordle-grid="useHighPerfText: true"></a-entity>
+        <!-- Board light to highlight the grid -->
+        <a-entity id="board-light" position="0 1 1" light="type: point; intensity: 1.2; distance: 5; color: #ffffff"></a-entity>
+        <!-- Text displays -->
+        <a-entity id="victory" position="0.2 0.7 0.2" scale="0.6 0.6 0.6" troika-text="color: #00d600; fontSize: 0.3"></a-entity>
+        <a-entity id="input" position="0.2 -1.01532 0.19474" troika-text="color: gold; value: Dead" material="color: gold; emissive: #222; metalness: 0.9">
+          <a-entity position="0 -1.62361 1.37736"></a-entity>
+          <a-entity></a-entity>
+        </a-entity>
       </a-entity>
-      
-      <!-- Wordle rows with dynamically generated grid -->
-      <a-entity id="word-grid" position="-0.4 0.3 0" scale="1.2 1.2 1.2" wordle-grid="useHighPerfText: true"></a-entity>
-      
-      <!-- Board light to highlight the grid -->
-      <a-entity id="board-light" position="0 1 1" light="type: point; intensity: 1.2; distance: 5; color: #ffffff"></a-entity>
-      
-      <!-- Text displays -->
-      <a-entity id="victory" position="0.2 0.7 0.2" scale="0.6 0.6 0.6"
-        troika-text="value: ; color: #00d600; fontSize: 0.3;"></a-entity>
-      
-      <a-entity id="input" position="0.2 0.65 0.1" 
-        troika-text="value: ; color: gold; fontSize: 0.2;"></a-entity>
+      <!-- Keyboard, now grouped and centered below the board -->
+      <a-entity id="keyboard" rotation="-25 0 0" scale="2 2 2" position="-0.33053 -1.1 0" a-keyboard="color: #ffffff; highlightColor: #ffcc00; fontSize: 0.45;"></a-entity>
     </a-entity>
-    
     <!-- VR -->
     <a-entity laser-controls="hand: right" raycaster="far: 100; lineColor: white;"></a-entity>
-    
-    <!-- keyboard with improved position -->
-    <a-entity id="keyboard" rotation="-25 0 0" scale="2 2 2" position="0 0.75 -0.85" a-keyboard="color: #ffffff; highlightColor: #ffcc00; fontSize: 0.45;">
+    <!-- THIRD_EDIT: add ambient and directional lights -->
+    <a-entity id="ambient-light" light="type: ambient; intensity:0.8; color:#ffffff"></a-entity>
+    <a-entity id="main-directional-light" light="type: directional; intensity:1.0; color:#ffffff; castShadow: true" position="0 5 1"></a-entity>
+    <a-entity light="type: point; intensity: 0.6; color:#ffffcc; distance: 15" position="0 3 -2"></a-entity>
+    <!-- FOURTH_EDIT: add particle emitters for success and failure -->
+    <a-entity id="success-flash" position="0 2 -1" visible="false">
+      <a-entity geometry="primitive: plane; width: 3; height: 3" material="color: #00ff00; transparent: true; opacity: 0.5"></a-entity>
     </a-entity>
-
-    <!-- Theme switcher button (replacing the shader sphere) -->
-    <a-entity 
-      position="2.5 1.5 -2"
-      geometry="primitive: sphere; radius: 0.2; segmentsHeight: 16; segmentsWidth: 16" 
-      material="color: #9c27b0; metalness: 0.7; roughness: 0.3"
-      backgroundButt="themes: ['night', 'starry', 'egypt', 'forest', 'dream', 'volcano']">
-      <a-animation attribute="rotation" dur="10000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      <a-entity position="0 0 0.25" rotation="0 0 0" scale="0.5 0.5 0.5"
-                troika-text="value: Theme; color: white; fontSize: 0.15; align: center;"></a-entity>
+    <a-entity id="fail-flash" position="0 2 -1" visible="false">
+      <a-entity geometry="primitive: plane; width: 3; height: 3" material="color: #ff0000; transparent: true; opacity: 0.5"></a-entity>
     </a-entity>
   </a-scene>
   <noscript>Please turn on Javascript to view this website.</noscript>
@@ -151,7 +224,388 @@
           loadingScreen.classList.add('hidden');
         });
       }
+
+      // Initialize Tone.js with user interaction
+      document.addEventListener('click', function initAudio() {
+        // Only try to initialize Tone if it loaded successfully
+        if (window.toneLoaded && !window.toneLoaded.isFulfilled) {
+          window.toneLoaded.then(() => {
+            if (typeof Tone !== 'undefined') {
+              Tone.start().then(() => {
+                console.log("Tone.js initialized and started");
+                window.toneLoaded.isStarted = true;
+              }).catch(err => {
+                console.warn("Could not start Tone.js audio context:", err);
+              });
+            }
+            // Remove the listener after first click
+            document.removeEventListener('click', initAudio);
+          }).catch(() => {
+            // Tone failed to load, remove the listener
+            document.removeEventListener('click', initAudio);
+          });
+        }
+      });
     });
+    
+    // Helper function to safely play audio with Tone.js
+    function safelyPlayTone(callback) {
+      if (typeof Tone === 'undefined') {
+        console.warn("Tone.js not available or not initialized yet");
+        return false;
+      }
+      
+      try {
+        // Check if context is running before trying to start
+        if (Tone.context.state !== 'running') {
+          Tone.start().then(callback).catch(err => {
+            console.warn("Could not play audio:", err.message);
+          });
+        } else {
+          // Context already running, just call the callback
+          callback();
+        }
+        return true;
+      } catch (err) {
+        console.warn("Error playing tone:", err.message);
+        return false;
+      }
+    }
+    
+    // FIFTH_EDIT: inject script to hook events, play audio and trigger effects
+    // Success effect: confetti + tone
+    function showSuccess() {
+      const conf = document.getElementById('success-flash');
+      conf.setAttribute('visible', true);
+      safelyPlayTone(() => {
+        if (typeof Tone !== 'undefined') {
+          const synth = new Tone.Synth().toDestination();
+          synth.triggerAttackRelease('C5', '8n');
+        }
+      });
+      setTimeout(() => { conf.setAttribute('visible', false); }, 2000);
+    }
+    // Failure effect: sparks + lower tone
+    function showFail() {
+      const sparks = document.getElementById('fail-flash');
+      sparks.setAttribute('visible', true);
+      safelyPlayTone(() => {
+        if (typeof Tone !== 'undefined') {
+          const synth = new Tone.Synth({ oscillator: { type: 'square' } }).toDestination();
+          synth.triggerAttackRelease('C3', '16n');
+        }
+      });
+      setTimeout(() => { sparks.setAttribute('visible', false); }, 1000);
+    }
+    // Listen for custom events from wordle-grid
+    const gridEl = document.getElementById('word-grid');
+    gridEl.addEventListener('tilecorrect', showSuccess);
+    gridEl.addEventListener('tileincorrect', showFail);
+
+    // Keyboard input handling
+    const inputEl = document.getElementById('input');
+    let currentWord = '';
+    const MAX_WORD_LENGTH = 5;
+
+    // Update the display with the current input word
+    function updateInputDisplay() {
+      inputEl.setAttribute('troika-text', 'value', currentWord || ' ');
+      
+      // Send letter update event to the word grid for live updates
+      const event = new CustomEvent('letterupdate', { 
+        detail: { word: currentWord } 
+      });
+      gridEl.dispatchEvent(event);
+    }
+
+    // Submit the current word
+    function submitWord() {
+      console.log("Submitting word:", currentWord);
+      if (currentWord.length === MAX_WORD_LENGTH) {
+        // Trigger a custom event on the word grid to submit the word
+        const event = new CustomEvent('wordsubmit', { 
+          detail: { word: currentWord } 
+        });
+        console.log("Dispatching wordsubmit event with word:", currentWord);
+        gridEl.dispatchEvent(event);
+        
+        // Play a submission sound
+        safelyPlayTone(() => {
+          if (typeof Tone !== 'undefined') {
+            const synth = new Tone.Synth().toDestination();
+            synth.triggerAttackRelease('G4', '8n');
+          }
+        });
+        
+        // Clear the current word
+        currentWord = '';
+        updateInputDisplay();
+      } else {
+        console.log("Word incomplete, length:", currentWord.length);
+        // Word is not complete - play error sound
+        safelyPlayTone(() => {
+          if (typeof Tone !== 'undefined') {
+            const synth = new Tone.Synth().toDestination();
+            synth.triggerAttackRelease('E3', '16n');
+          }
+        });
+        // Flash the input to indicate error
+        inputEl.setAttribute('troika-text', 'color', '#ff0000');
+        setTimeout(() => {
+          inputEl.setAttribute('troika-text', 'color', 'gold');
+        }, 300);
+      }
+    }
+
+    // Handle keyboard input
+    document.addEventListener('keydown', function(event) {
+      console.log("Key pressed:", event.key, "KeyCode:", event.keyCode);
+      // Ignore key presses if a modal is visible
+      if (document.getElementById('tutorial-modal').getAttribute('visible') === 'true') {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      
+      // Check for Enter key in multiple ways to ensure it works
+      if (key === 'enter' || key === '\n' || key === '\r' || event.keyCode === 13) {
+        console.log("Enter key detected");
+        // Submit the current word
+        submitWord();
+      } else if (key === 'backspace') {
+        // Remove the last character
+        if (currentWord.length > 0) {
+          currentWord = currentWord.slice(0, -1);
+          updateInputDisplay();
+          
+          // Send letter delete event to the word grid
+          const event = new CustomEvent('letterdelete', { 
+            detail: { word: currentWord } 
+          });
+          gridEl.dispatchEvent(event);
+          
+          // Play backspace sound
+          safelyPlayTone(() => {
+            if (typeof Tone !== 'undefined') {
+              const synth = new Tone.Synth().toDestination();
+              synth.triggerAttackRelease('A3', '32n');
+            }
+          });
+        }
+      } else if (/^[a-z]$/.test(key) && currentWord.length < MAX_WORD_LENGTH) {
+        // Add a letter if it's alphabetic and we're under the max length
+        currentWord += key.toUpperCase();
+        updateInputDisplay();
+        
+        // Play key press sound
+        safelyPlayTone(() => {
+          if (typeof Tone !== 'undefined') {
+            const synth = new Tone.Synth().toDestination();
+            synth.triggerAttackRelease('C4', '32n');
+          }
+        });
+      }
+    });
+
+    // Initialize the input display
+    updateInputDisplay();
+
+    // Environment switcher
+    function setEnvironment(type) {
+      console.log("Setting environment to:", type);
+      const envEntity = document.querySelector('[environment]');
+      let preset, skyColor, horizonColor, groundColor, groundColor2;
+      
+      if (type === 'bright') {
+        // Randomly select one of our bright presets
+        const brightPresets = [
+          {preset: 'japan', skyColor: '#FFCF8C', horizonColor: '#FFB16F', groundColor: '#9ED887', groundColor2: '#62C29B'},
+          {preset: 'goldmine', skyColor: '#FFEEB0', horizonColor: '#FFD474', groundColor: '#F5AF78', groundColor2: '#DD9A6B'},
+          {preset: 'threetowers', skyColor: '#B0FBFF', horizonColor: '#79D6FF', groundColor: '#9DEBA3', groundColor2: '#5BB26B'},
+          {preset: 'arches', skyColor: '#B7E0FF', horizonColor: '#A0CEDF', groundColor: '#DECB83', groundColor2: '#D1BA7D'}
+        ];
+        
+        const selectedPreset = brightPresets[Math.floor(Math.random() * brightPresets.length)];
+        preset = selectedPreset.preset;
+        skyColor = selectedPreset.skyColor;
+        horizonColor = selectedPreset.horizonColor; 
+        groundColor = selectedPreset.groundColor;
+        groundColor2 = selectedPreset.groundColor2;
+        
+        // Update the light for bright mode
+        document.getElementById('ambient-light').setAttribute('light', 'intensity', 0.8);
+        document.getElementById('ambient-light').setAttribute('light', 'color', '#ffffff');
+        document.getElementById('main-directional-light').setAttribute('light', 'intensity', 1.2);
+        document.getElementById('main-directional-light').setAttribute('light', 'color', '#fffaf0');
+      } else {
+        // Let the backgroundButt component handle the dark themes
+        return;
+      }
+      
+      // Apply the selected environment
+      envEntity.setAttribute('environment', {
+        preset: preset,
+        skyColor: skyColor,
+        horizonColor: horizonColor,
+        groundColor: groundColor,
+        groundColor2: groundColor2,
+        shadow: true,
+        playArea: 1.5,
+        grid: 'none'
+      });
+      
+      // Play a theme change sound
+      safelyPlayTone(() => {
+        if (typeof Tone !== 'undefined') {
+          const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+          synth.triggerAttackRelease(['C4', 'E4', 'G4'], '8n');
+        }
+      });
+    }
+
+    // Dark theme cycler
+    let currentDarkThemeIndex = 0;
+    const darkThemes = ['starry', 'night', 'egypt', 'forest', 'dream', 'volcano'];
+    
+    function cycleDarkThemes() {
+      const theme = darkThemes[currentDarkThemeIndex];
+      themeSwitch(theme);
+      // Update index for next click
+      currentDarkThemeIndex = (currentDarkThemeIndex + 1) % darkThemes.length;
+      
+      // Show the name of the current theme briefly
+      const inputEl = document.getElementById('input');
+      const oldValue = inputEl.getAttribute('troika-text').value;
+      inputEl.setAttribute('troika-text', 'value', `Theme: ${theme.toUpperCase()}`);
+      setTimeout(() => {
+        inputEl.setAttribute('troika-text', 'value', oldValue);
+      }, 1500);
+    }
+
+    // Theme switching function - integrated here to avoid relying on external files
+    window.themeSwitch = function(themeName) {
+      console.log("Switching to theme:", themeName);
+      
+      // Theme definitions
+      const THEMES = {
+        starry: {
+          preset: 'starry',
+          skyColor: '#0d0d1a',
+          horizonColor: '#191970',
+          groundColor: '#0a0a0a',
+          groundColor2: '#0a0a14',
+          ambientLightColor: '#b9d5ff',
+          ambientLightIntensity: 0.5,
+          directionalLightColor: '#ffffff',
+          directionalLightIntensity: 0.8
+        },
+        night: {
+          preset: 'night',
+          skyColor: '#0d0d1a',
+          horizonColor: '#091034',
+          groundColor: '#020202',
+          groundColor2: '#020209',
+          ambientLightColor: '#0a1025',
+          ambientLightIntensity: 0.25,
+          directionalLightColor: '#2c4073',
+          directionalLightIntensity: 0.5
+        },
+        egypt: {
+          preset: 'egypt',
+          skyColor: '#8faed7',
+          horizonColor: '#d7b677',
+          groundColor: '#d7956b',
+          groundColor2: '#d88c5a',
+          ambientLightColor: '#fff2cc',
+          ambientLightIntensity: 0.5,
+          directionalLightColor: '#ffffe0',
+          directionalLightIntensity: 0.8
+        },
+        forest: {
+          preset: 'forest',
+          skyColor: '#91c4e2',
+          horizonColor: '#b4d2a8',
+          groundColor: '#4f6843',
+          groundColor2: '#2b3d26',
+          ambientLightColor: '#c9e6ca',
+          ambientLightIntensity: 0.5,
+          directionalLightColor: '#f5faf5',
+          directionalLightIntensity: 0.8
+        },
+        dream: {
+          preset: 'dream',
+          skyColor: '#c4a4ff',
+          horizonColor: '#ffd4e9',
+          groundColor: '#e3c3ff',
+          groundColor2: '#d4b4ff',
+          ambientLightColor: '#e7d8f5',
+          ambientLightIntensity: 0.5,
+          directionalLightColor: '#ffffff',
+          directionalLightIntensity: 0.8
+        },
+        volcano: {
+          preset: 'volcano',
+          skyColor: '#2a0d02',
+          horizonColor: '#4a1f09',
+          groundColor: '#432109',
+          groundColor2: '#341909',
+          ambientLightColor: '#ff8c7a',
+          ambientLightIntensity: 0.5,
+          directionalLightColor: '#ffccaa',
+          directionalLightIntensity: 0.7
+        }
+      };
+      
+      // Get theme settings or use starry as fallback
+      const theme = THEMES[themeName] || THEMES.starry;
+      const envEntity = document.querySelector('[environment]');
+      
+      if (!envEntity) {
+        console.error('No environment entity found');
+        return;
+      }
+      
+      // Apply environment settings
+      envEntity.setAttribute('environment', {
+        preset: theme.preset,
+        skyColor: theme.skyColor,
+        horizonColor: theme.horizonColor,
+        groundColor: theme.groundColor,
+        groundColor2: theme.groundColor2,
+        shadow: true,
+        playArea: 1.5,
+        grid: 'none'
+      });
+      
+      // Update lights
+      const ambientLight = document.getElementById('ambient-light');
+      const directionalLight = document.getElementById('main-directional-light');
+      
+      if (ambientLight) {
+        ambientLight.setAttribute('light', {
+          color: theme.ambientLightColor,
+          intensity: theme.ambientLightIntensity
+        });
+      }
+      
+      if (directionalLight) {
+        directionalLight.setAttribute('light', {
+          color: theme.directionalLightColor,
+          intensity: theme.directionalLightIntensity,
+          castShadow: true
+        });
+      }
+      
+      // Play theme change sound
+      safelyPlayTone(() => {
+        if (typeof Tone !== 'undefined') {
+          const synth = new Tone.Synth().toDestination();
+          synth.triggerAttackRelease('D4', '8n');
+        }
+      });
+      
+      return themeName;
+    }
   </script>
 </body>
 

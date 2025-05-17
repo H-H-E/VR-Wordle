@@ -74,7 +74,8 @@ const THEMES = {
  * @param {string} themeName - Optional theme name to switch to
  * @returns {string} The name of the active theme after switching
  */
-const themeSwitch = (themeName) => {
+// Define but don't export to global scope to prevent conflicts
+const _themeSwitch = (themeName) => {
   const environment = document.querySelector('[environment]');
   if (!environment) {
     console.error('No environment entity found');
@@ -146,5 +147,5 @@ const themeSwitch = (themeName) => {
 
 // Export for module use if needed
 if (typeof module !== 'undefined') {
-  module.exports = { themeSwitch, THEMES };
+  module.exports = { themeSwitch: _themeSwitch, THEMES };
 }

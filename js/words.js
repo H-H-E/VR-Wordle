@@ -5926,6 +5926,75 @@ const WORDS = [
 
 document.addEventListener('a-keyboard-update', updateInput)
 
+// Detect if user is on a desktop/laptop or mobile/VR device
+function isMobileOrVR() {
+  // Check for mobile devices
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  // Check for VR headset (WebXR capabilities)
+  const isVRSupported = 'xr' in navigator && navigator.xr && navigator.xr.isSessionSupported;
+  
+  // Check if in VR mode
+  const isInVR = document.querySelector('a-scene').is('vr-mode');
+  
+  return isMobile || isInVR || (typeof isVRSupported === 'function' && isVRSupported('immersive-vr'));
+}
+
+// Handle physical keyboard input for desktop users
+function setupPhysicalKeyboardInput() {
+  // Only set up physical keyboard if not on mobile or VR
+  if (!isMobileOrVR()) {
+    console.log('Setting up physical keyboard input for desktop user');
+    
+    // Make virtual keyboard smaller and slightly transparent for desktop users
+    const keyboardEl = document.querySelector('#keyboard');
+    if (keyboardEl) {
+      keyboardEl.setAttribute('scale', '1 1 1');
+      keyboardEl.setAttribute('position', '-0.33053 -1.5 0');
+      // Add semi-transparency to indicate it's not the primary input method
+      keyboardEl.querySelectorAll('a-entity[material]').forEach(entity => {
+        const material = entity.getAttribute('material');
+        if (material && typeof material === 'object') {
+          entity.setAttribute('material', Object.assign({}, material, { opacity: 0.7 }));
+        }
+      });
+    }
+    
+    // Add direct keyboard event listener
+    document.addEventListener('keydown', function(event) {
+      // Prevent default to avoid scrolling with arrow keys etc.
+      event.preventDefault();
+      
+      // Map physical keyboard keys to virtual keyboard events
+      let detail = { code: event.keyCode, value: '' };
+      
+      // Handle different key types
+      if (event.key.length === 1 && /^[a-zA-Z0-9]$/.test(event.key)) {
+        // Single alphanumeric characters
+        detail.value = event.key.toLowerCase();
+      } else if (event.key === 'Backspace') {
+        detail.code = 8; // Backspace code
+      } else if (event.key === 'Enter') {
+        detail.code = 6; // Submit code (using 06 from the virtual keyboard)
+      }
+      
+      // Dispatch custom event matching the format expected by updateInput
+      const customEvent = new CustomEvent('a-keyboard-update', { detail });
+      document.dispatchEvent(customEvent);
+    });
+  }
+}
+
+// Initialize physical keyboard after scene loads
+document.addEventListener('DOMContentLoaded', function() {
+  const scene = document.querySelector('a-scene');
+  if (scene.hasLoaded) {
+    setupPhysicalKeyboardInput();
+  } else {
+    scene.addEventListener('loaded', setupPhysicalKeyboardInput);
+  }
+});
+
 // code below cycles between the different environment presets
 var presetIndex = 0;
 function backgroundChanger() {
