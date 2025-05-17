@@ -5790,20 +5790,21 @@ const WORDS = [
                 }
             }
         }
-        //acutally set the characters and colors
-        document.querySelector('#row' + selectedRow).querySelectorAll("a-entity").forEach(function (child, index) {
-            /*child.setAttribute("text", {
-                "value": text[index],
-                "color": colors[index]
-            });*/
-            child.setAttribute("text-geometry", {
-                "value": text[index],
-                "size": .2,
-                
+        // Update characters and tile background colours
+        document.querySelector('#row' + selectedRow).querySelectorAll('.charDisplay').forEach(function (charEnt, index) {
+            // Update the character itself
+            charEnt.setAttribute('text-geometry', {
+                value: text[index],
+                size: 0.22,
+                align: 'center'
             });
-            child.setAttribute("material", { 
-                "color": colors[index]
-            });
+            charEnt.setAttribute('material', { color: '#ffffff' }); // Keep glyphs white
+
+            // Apply colour to the tile background (first child)
+            const bgPlane = charEnt.querySelector('a-entity');
+            if (bgPlane) {
+                bgPlane.setAttribute('material', { color: colors[index] });
+            }
         });
        
         selectedRow++; //move down a row on wordle board

@@ -4,216 +4,155 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimal-ui, viewport-fit=cover">
+  <!-- Load A-Frame first as it includes THREE.js -->
   <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <!-- Remove explicit THREE.js import to avoid conflicts -->
+  <!-- Load Troika dependencies before its A-Frame component -->
+  <script src="https://cdn.jsdelivr.net/npm/troika-three-text@0.47.1/dist/troika-three-text.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-troika-text@0.13.0/dist/aframe-troika-text.min.js"></script>
+  <!-- Load other A-Frame components -->
   <script src="./aframe-keyboard.min.js"></script>
   <script src="https://unpkg.com/aframe-text-geometry-component/dist/aframe-text-geometry-component.min.js"></script>
-  <script src="https://rawgit.com/rdub80/aframe-gui/master/dist/aframe-gui.min.js"></script>
-  <script src="https://unpkg.com/aframe-environment-component@1.5.x/dist/aframe-environment-component.min.js"></script>
-  <script type="text/javascript">
-    AFRAME.registerComponent('backgroundButt', {
-      schema: {
-        default: ''
-      },
-      init() {
-        const environment = document.querySelector('[environment]');
-        var b = false
-        this.el.addEventListener('click', () => {
-          if (b) {
-            environment.setAttribute('environment', 'preset: egypt; lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #fff2cc; directionalColor: #ffffe0; lightIntensity: 1.5; shadow: true;');
-          } else {
-            environment.setAttribute('environment', 'preset: starry; lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #b9d5ff; directionalColor: #ffffff; lightIntensity: 1.5; shadow: true;');
-          }
-          b = !b;
-          console.log('clicked');
-        });
-      }
-    });
-  </script>
-
-
+  <script src="https://cdn.jsdelivr.net/npm/aframe-gui@0.5.0/dist/aframe-gui.min.js"></script>
+  <script src="https://unpkg.com/aframe-environment-component/dist/aframe-environment-component.min.js"></script>
+  
   <title>VRdle</title>
-  <style src="./style.css"></style>
-  <script src="./words.js"></script>
-  <script src="./displacment-offset-shader.js"></script>
-
-
+  <link rel="stylesheet" href="./style.css">
+  <script src="./js/words.js"></script>
+  <script src="./js/stt.js"></script>
+  <script src="./js/gui.js"></script>
+  <script src="./js/displacment-offset-shader.js"></script>
+  <script src="./js/components/backgroundButt.js"></script>
+  <script src="./js/components/wordle-grid.js"></script>
 
 </head>
 
 <body>
-
+  <!-- Custom Loading Screen -->
+  <div id="loading-screen">
+    <div id="loading-logo">Poiesis</div>
+    <div id="loading-education">Education</div>
+    <div id="loading-spinner"></div>
+  </div>
 
   <a-scene id="scene" keyboard-controls="false" keyboard-shortcuts="enterVR: false" cursor="rayOrigin:mouse" keyboard>
     <a-assets>
-      <model id="model" src="VRdle/logoc.gltf" />
-
+      <model id="model" src="assets/models/logoc.gltf" />
 
       <img id="egy" src="./assets/images/egypt.jpeg">
       <img id="sky" src="./assets/images/sky.jpeg">
       <img id="rules" src="./assets/images/rule.png">
       <a-asset-item id="optimerBoldFont"
-        src="https://rawgit.com/mrdoob/three.js/dev/examples/fonts/optimer_bold.typeface.json"></a-asset-item>
+        src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/fonts/optimer_bold.typeface.json"></a-asset-item>
 
     </a-assets>
-    <!-- environment -->
-    <a-entity environment="preset: starry; playArea: 1.5; shadow: true; lighting: point; lightPosition: 0 2.5 -0.5; ambientColor: #b9d5ff; directionalColor: #ffffff; lightIntensity: 1.5;"></a-entity>
+    <!-- environment - properly configured -->
+    <a-entity environment="preset: starry; skyColor: #0d0d1a; horizonColor: #191970; groundColor: #0a0a0a; groundColor2: #0a0a14; shadow: true; playArea: 1.5; grid: none;"></a-entity>
 
-    <!-- Additional Lighting -->
-    <a-entity id="ambient-light" light="type: ambient; color: #b9d5ff; intensity: 0.5"></a-entity>
-    <a-entity id="main-directional-light" position="1 5 2" light="type: directional; color: #ffffff; intensity: 0.8; castShadow: true; shadowMapHeight: 1024; shadowMapWidth: 1024"></a-entity>
-    <a-entity id="keyboard-spot" position="-0.3 2 0" light="type: spot; color: #ffffff; intensity: 0.6; angle: 45; penumbra: 0.8; decay: 1; distance: 5; castShadow: true;"></a-entity>
-    <a-entity id="background-spot" position="3 2 0" light="type: spot; color: #ffe6cc; intensity: 0.4; angle: 60; penumbra: 0.5; decay: 1.5; distance: 10"></a-entity>
+    <!-- Additional Lighting (removed to avoid conflicts with environment component) -->
+    <!-- <a-entity id="ambient-light" light="type: ambient; color: #0a1025; intensity: 0.25"></a-entity> -->
+    <!-- <a-entity id="main-directional-light" position="1 5 2" light="type: directional; color: #2c4073; intensity: 0.5; castShadow: true; shadowMapHeight: 1024; shadowMapWidth: 1024"></a-entity> -->
 
     <!-- wordle board -->
     <!-- Container for the game board to position everything together -->
     <a-entity id="game-container" position="0 1.55 -1.2" rotation="0 0 0">
 
       <a-entity id="logo" scale="3 3 3" position="4 3 0" rotation="0 -90 0"
-        text-geometry="value:Poiesis; size:0.15; font: #optimerBoldFont;" >
-        <a-entity id="logoline2" position="0 -.2 0" text-geometry="value:Education; size:0.15"
-          material="color:orange; metalness: .4; roughness: 0.8;"></a-entity>
+        troika-text="value: Poiesis; fontSize: 0.15; color: #ffffff; font: https://cdn.jsdelivr.net/npm/three@0.147.0/examples/fonts/optimer_bold.typeface.json">
+        <a-entity id="logoline2" position="0 -.2 0" 
+          troika-text="value: Education; fontSize: 0.15; color: orange;"></a-entity>
       </a-entity>
 
-      <a-camera position="0.05 0 1.9" wasd-controls-enabled="false" far="20000" near="0.005"></a-camera>
-      <a-entity id="ruleplane" geometry="primitive: plane; height: 1.8; width: 1.8" rotation="-90.00021045914971 0 0" position="0 -1.55 0"
-        material="src:#rules"></a-entity>
+      <a-camera position="0.05 0 1.9" wasd-controls-enabled="false" far="20000" near="0.005">
+        <a-entity cursor="fuse: false; rayOrigin: mouse" raycaster="objects: .clickable"></a-entity>
+      </a-camera>
       
-      <!-- Wordle rows with optimized positions and increased letter size -->
-      <a-entity id="word-grid" position="-0.4 0.3 0" scale="1.2 1.2 1.2">
-        <a-entity id="row1" position="0 0.5 0" rotation="0 0 0">
-          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-        </a-entity>
-        <a-entity id="row2" position="0 0.25 0" rotation="0 0 0">
-          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
-            material="color:blue; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-        </a-entity>
-        <a-entity id="row3" position="0 0 0" rotation="0 0 0">
-          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-        </a-entity>
-        <a-entity id="row4" position="0 -0.25 0" rotation="0 0 0">
-          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-        </a-entity>
-        <a-entity id="row5" position="0 -0.5 0" rotation="0 0 0">
-          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-        </a-entity>
-        <a-entity id="row6" position="0 -0.75 0" rotation="0 0 0">
-          <a-entity class="charDisplay" position="0 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.3 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.6 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="0.9 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
-          </a-entity>
-          <a-entity class="charDisplay" position="1.2 0 0" text-geometry="value:; size:0.25"
-            material="color:; metalness:0.9; emissive: #111;">
+      <!-- Tutorial button -->
+      <a-entity id="tutorial-button" position="2 0.1 0" rotation="0 0 0"
+                geometry="primitive: box; width: 0.3; height: 0.3; depth: 0.05" 
+                material="color: #2196F3; opacity: 0.9"
+                class="clickable"
+                onclick="document.getElementById('tutorial-modal').setAttribute('visible', true);">
+        <a-entity position="0 0 0.03" rotation="0 0 0" scale="1 1 1"
+                  troika-text="value: ?; color: white; fontSize: 0.2; align: center;"></a-entity>
+      </a-entity>
+      
+      <!-- Tutorial modal (hidden by default) -->
+      <a-entity id="tutorial-modal" visible="false" position="0 0 0.5">
+        <a-entity 
+          geometry="primitive: plane; width: 1.2; height: 1.4" 
+          material="color: #000; opacity: 0.85"
+          position="0 0 0">
+          <a-entity position="0 0.6 0.01" troika-text="value: How to Play:; color: #ffffff; fontSize: 0.08; align: center;"></a-entity>
+          <a-entity position="0 0.48 0.01" troika-text="value: 1. Guess the WORDLE in 6 tries.; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
+          <a-entity position="0 0.4 0.01" troika-text="value: 2. Each guess must be a valid 5-letter word.; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
+          <a-entity position="0 0.32 0.01" troika-text="value: 3. Color of the tiles will change to show; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
+          <a-entity position="0 0.24 0.01" troika-text="value: how close your guess was to the word.; color: #cccccc; fontSize: 0.05; align: center;"></a-entity>
+          <a-entity position="0 0.12 0.01" troika-text="value: GREEN: Letter is in the correct spot; color: #00d600; fontSize: 0.05; align: center;"></a-entity>
+          <a-entity position="0 0.04 0.01" troika-text="value: YELLOW: Letter is in the word but wrong spot; color: #ffcc00; fontSize: 0.05; align: center;"></a-entity>
+          <a-entity position="0 -0.04 0.01" troika-text="value: GREY: Letter is not in the word; color: #888888; fontSize: 0.05; align: center;"></a-entity>
+          
+          <!-- Close button -->
+          <a-entity 
+            position="0.5 0.6 0.01" 
+            geometry="primitive: circle; radius: 0.05" 
+            material="color: #f44336"
+            class="clickable"
+            onclick="document.getElementById('tutorial-modal').setAttribute('visible', false);">
+            <a-entity position="0 0 0.01" troika-text="value: X; color: white; fontSize: 0.05; align: center;"></a-entity>
           </a-entity>
         </a-entity>
       </a-entity>
+      
+      <!-- Wordle rows with dynamically generated grid -->
+      <a-entity id="word-grid" position="-0.4 0.3 0" scale="1.2 1.2 1.2" wordle-grid="useHighPerfText: true"></a-entity>
+      
+      <!-- Board light to highlight the grid -->
+      <a-entity id="board-light" position="0 1 1" light="type: point; intensity: 1.2; distance: 5; color: #ffffff"></a-entity>
       
       <!-- Text displays -->
-      <a-text id="victory" font="dejavu" color="#00d600" value="" scale="0.6 0.6 0.6" position="0.2 0.7 0.2"></a-text>
-      <a-entity id="input" position="0.2 0.65 0.1" text-geometry="value:; size:0.2"
-        material="color:gold; metalness:0.9; emissive: #222;">
-      </a-entity>
+      <a-entity id="victory" position="0.2 0.7 0.2" scale="0.6 0.6 0.6"
+        troika-text="value: ; color: #00d600; fontSize: 0.3;"></a-entity>
+      
+      <a-entity id="input" position="0.2 0.65 0.1" 
+        troika-text="value: ; color: gold; fontSize: 0.2;"></a-entity>
     </a-entity>
     
     <!-- VR -->
     <a-entity laser-controls="hand: right" raycaster="far: 100; lineColor: white;"></a-entity>
     
     <!-- keyboard with improved position -->
-    <a-entity id="keyboard" rotation="-30 0 0" scale="1.8 1.8 1.8" position="0 0.95 -0.9" a-keyboard>
+    <a-entity id="keyboard" rotation="-25 0 0" scale="2 2 2" position="0 0.75 -0.85" a-keyboard="color: #ffffff; highlightColor: #ffcc00; fontSize: 0.45;">
     </a-entity>
 
-    <a-sphere material="shader:displacement-offset; color: #00d600; metalness: 0.9; roughness: 0.9;"" 
-                myoffset-updater
-                scale="1 1 1"
-                radius="0.2"
-                position="2.5 1.5 -2"
-                segments-height="128"
-                segments-width="128">
-        <a-animation attribute="scale" direction="alternate-reverse" dur="5000" from="1 1 1" to="4 4 4" repeat="indefinite"></a-animation>
-      </a-sphere>
-      
-    <a-entity id="rules" position="-0.5 1.2 -0.7" primitive="plane" material="src:#rules">
-
-      <!-- Mouse input -->
+    <!-- Theme switcher button (replacing the shader sphere) -->
+    <a-entity 
+      position="2.5 1.5 -2"
+      geometry="primitive: sphere; radius: 0.2; segmentsHeight: 16; segmentsWidth: 16" 
+      material="color: #9c27b0; metalness: 0.7; roughness: 0.3"
+      backgroundButt="themes: ['night', 'starry', 'egypt', 'forest', 'dream', 'volcano']">
+      <a-animation attribute="rotation" dur="10000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
+      <a-entity position="0 0 0.25" rotation="0 0 0" scale="0.5 0.5 0.5"
+                troika-text="value: Theme; color: white; fontSize: 0.15; align: center;"></a-entity>
+    </a-entity>
   </a-scene>
   <noscript>Please turn on Javascript to view this website.</noscript>
 
+  <script>
+    // Hide loading screen once everything is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      var scene = document.querySelector('a-scene');
+      var loadingScreen = document.getElementById('loading-screen');
+      
+      if (scene.hasLoaded) {
+        loadingScreen.classList.add('hidden');
+      } else {
+        scene.addEventListener('loaded', function() {
+          loadingScreen.classList.add('hidden');
+        });
+      }
+    });
+  </script>
 </body>
 
 </html>

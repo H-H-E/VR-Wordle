@@ -170,12 +170,16 @@ void main() {
 
 AFRAME.registerComponent('myoffset-updater', {
   init: function () {
-    this.offset = new THREE.Vector3();
+    // Use THREE from AFRAME.THREE to ensure we're using the correct instance
+    this.offset = new AFRAME.THREE.Vector3();
   },
   
   tick: function (t, dt) {
-    this.offset.copy(this.el.sceneEl.camera.el.getAttribute('position'));
-    this.offset.y = 0;
+    // Get position from camera and apply it to the offset
+    const cameraPosition = this.el.sceneEl.camera.el.getAttribute('position');
+    this.offset.set(cameraPosition.x, 0, cameraPosition.z);
+    
+    // Update the material's myOffset uniform
     this.el.setAttribute('material', 'myOffset', this.offset);
   }
 });
