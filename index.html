@@ -16,7 +16,6 @@
       return this.setAttribute(name, attribute);
     };
   </script>
-  <!-- Remove explicit THREE.js import to avoid conflicts -->
   <!-- Load Troika dependencies before its A-Frame component -->
   <script src="https://cdn.jsdelivr.net/npm/troika-three-text@0.47.1/dist/troika-three-text.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-troika-text@0.13.0/dist/aframe-troika-text.min.js"></script>
@@ -25,7 +24,7 @@
   <script src="https://unpkg.com/aframe-text-geometry-component/dist/aframe-text-geometry-component.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-gui@0.5.0/dist/aframe-gui.min.js"></script>
   <script src="https://unpkg.com/aframe-environment-component/dist/aframe-environment-component.min.js"></script>
-  <!-- FIRST_EDIT: add postprocessing, particle-system, and Tone.js libraries -->
+  <!-- Add postprocessing, particle-system, and Tone.js libraries -->
   <script src="https://unpkg.com/aframe-postprocessing@4.1.0/dist/aframe-postprocessing.min.js"></script>
   <script src="https://unpkg.com/aframe-particle-system-component/dist/aframe-particle-system-component.min.js"></script>
   <!-- Load Tone.js with appropriate error handling -->
@@ -76,9 +75,9 @@
   <script src="./js/words.js"></script>
   <script src="./js/stt.js"></script>
   <script src="./js/gui.js"></script>
-  <script src="./js/displacment-offset-shader.js"></script>
-  <script src="./js/components/backgroundButt.js"></script>
   <script src="./js/components/wordle-grid.js"></script>
+  <!-- Load our enhanced audio system -->
+  <script src="./js/audio-system.js"></script>
 
 </head>
 
@@ -92,21 +91,9 @@
 
   <a-scene id="scene" keyboard-controls="false" keyboard-shortcuts="enterVR: false" cursor="rayOrigin:mouse" keyboard postprocessing="bloom:{strength:0.8,radius:0.5,threshold:0.9};chromaticAberration:{offset:0.02};fxaa:true">
     <a-assets>
-      <model id="model" src="assets/models/logoc.gltf" />
-
-      <img id="egy" src="./assets/images/egypt.jpeg">
-      <img id="sky" src="./assets/images/sky.jpeg">
-      <img id="rules" src="./assets/images/rule.png">
-      <a-asset-item id="optimerBoldFont"
-        src="https://cdn.jsdelivr.net/npm/three@0.173.0/examples/fonts/optimer_bold.typeface.json"></a-asset-item>
-
     </a-assets>
     <!-- environment - properly configured -->
     <a-entity environment="preset: starry; skyColor: #0d0d1a; horizonColor: #191970; groundColor: #0a0a0a; groundColor2: #0a0a14; shadow: true; playArea: 1.5; grid: none;"></a-entity>
-
-    <!-- Additional Lighting (removed to avoid conflicts with environment component) -->
-    <!-- <a-entity id="ambient-light" light="type: ambient; color: #0a1025; intensity: 0.25"></a-entity> -->
-    <!-- <a-entity id="main-directional-light" position="1 5 2" light="type: directional; color: #2c4073; intensity: 0.5; castShadow: true; shadowMapHeight: 1024; shadowMapWidth: 1024"></a-entity> -->
 
     <!-- Main UI group for centering board and keyboard together -->
     <a-entity id="main-ui" position="0 1.5 -1.2" rotation="0 0 0">
@@ -197,11 +184,11 @@
     </a-entity>
     <!-- VR -->
     <a-entity laser-controls="hand: right" raycaster="far: 100; lineColor: white;"></a-entity>
-    <!-- THIRD_EDIT: add ambient and directional lights -->
+    <!-- Add ambient and directional lights -->
     <a-entity id="ambient-light" light="type: ambient; intensity:0.8; color:#ffffff"></a-entity>
     <a-entity id="main-directional-light" light="type: directional; intensity:1.0; color:#ffffff; castShadow: true" position="0 5 1"></a-entity>
     <a-entity light="type: point; intensity: 0.6; color:#ffffcc; distance: 15" position="0 3 -2"></a-entity>
-    <!-- FOURTH_EDIT: add particle emitters for success and failure -->
+    <!-- Add particle emitters for success and failure -->
     <a-entity id="success-flash" position="0 2 -1" visible="false">
       <a-entity geometry="primitive: plane; width: 3; height: 3" material="color: #00ff00; transparent: true; opacity: 0.5"></a-entity>
     </a-entity>
@@ -231,12 +218,10 @@
         if (window.toneLoaded && !window.toneLoaded.isFulfilled) {
           window.toneLoaded.then(() => {
             if (typeof Tone !== 'undefined') {
-              Tone.start().then(() => {
-                console.log("Tone.js initialized and started");
-                window.toneLoaded.isStarted = true;
-              }).catch(err => {
-                console.warn("Could not start Tone.js audio context:", err);
-              });
+              // Initialize our enhanced audio system
+              if (window.VRdleAudio) {
+                window.VRdleAudio.init();
+              }
             }
             // Remove the listener after first click
             document.removeEventListener('click', initAudio);
@@ -248,55 +233,32 @@
       });
     });
     
-    // Helper function to safely play audio with Tone.js
-    function safelyPlayTone(callback) {
-      if (typeof Tone === 'undefined') {
-        console.warn("Tone.js not available or not initialized yet");
-        return false;
-      }
-      
-      try {
-        // Check if context is running before trying to start
-        if (Tone.context.state !== 'running') {
-          Tone.start().then(callback).catch(err => {
-            console.warn("Could not play audio:", err.message);
-          });
-        } else {
-          // Context already running, just call the callback
-          callback();
-        }
-        return true;
-      } catch (err) {
-        console.warn("Error playing tone:", err.message);
-        return false;
-      }
-    }
-    
-    // FIFTH_EDIT: inject script to hook events, play audio and trigger effects
     // Success effect: confetti + tone
     function showSuccess() {
       const conf = document.getElementById('success-flash');
       conf.setAttribute('visible', true);
-      safelyPlayTone(() => {
-        if (typeof Tone !== 'undefined') {
-          const synth = new Tone.Synth().toDestination();
-          synth.triggerAttackRelease('C5', '8n');
-        }
-      });
+      
+      // Play enhanced success sound
+      if (window.VRdleAudio && window.VRdleAudio.ready) {
+        window.VRdleAudio.playSuccess();
+      }
+      
       setTimeout(() => { conf.setAttribute('visible', false); }, 2000);
     }
+    
     // Failure effect: sparks + lower tone
     function showFail() {
       const sparks = document.getElementById('fail-flash');
       sparks.setAttribute('visible', true);
-      safelyPlayTone(() => {
-        if (typeof Tone !== 'undefined') {
-          const synth = new Tone.Synth({ oscillator: { type: 'square' } }).toDestination();
-          synth.triggerAttackRelease('C3', '16n');
-        }
-      });
+      
+      // Play enhanced failure sound
+      if (window.VRdleAudio && window.VRdleAudio.ready) {
+        window.VRdleAudio.playFailure();
+      }
+      
       setTimeout(() => { sparks.setAttribute('visible', false); }, 1000);
     }
+    
     // Listen for custom events from wordle-grid
     const gridEl = document.getElementById('word-grid');
     gridEl.addEventListener('tilecorrect', showSuccess);
@@ -329,26 +291,21 @@
         console.log("Dispatching wordsubmit event with word:", currentWord);
         gridEl.dispatchEvent(event);
         
-        // Play a submission sound
-        safelyPlayTone(() => {
-          if (typeof Tone !== 'undefined') {
-            const synth = new Tone.Synth().toDestination();
-            synth.triggerAttackRelease('G4', '8n');
-          }
-        });
+        // Play enhanced submission sound
+        if (window.VRdleAudio && window.VRdleAudio.ready) {
+          window.VRdleAudio.playSubmit();
+        }
         
         // Clear the current word
         currentWord = '';
         updateInputDisplay();
       } else {
         console.log("Word incomplete, length:", currentWord.length);
-        // Word is not complete - play error sound
-        safelyPlayTone(() => {
-          if (typeof Tone !== 'undefined') {
-            const synth = new Tone.Synth().toDestination();
-            synth.triggerAttackRelease('E3', '16n');
-          }
-        });
+        // Word is not complete - play enhanced error sound
+        if (window.VRdleAudio && window.VRdleAudio.ready) {
+          window.VRdleAudio.playError();
+        }
+        
         // Flash the input to indicate error
         inputEl.setAttribute('troika-text', 'color', '#ff0000');
         setTimeout(() => {
@@ -384,26 +341,20 @@
           });
           gridEl.dispatchEvent(event);
           
-          // Play backspace sound
-          safelyPlayTone(() => {
-            if (typeof Tone !== 'undefined') {
-              const synth = new Tone.Synth().toDestination();
-              synth.triggerAttackRelease('A3', '32n');
-            }
-          });
+          // Play enhanced backspace sound
+          if (window.VRdleAudio && window.VRdleAudio.ready) {
+            window.VRdleAudio.playBackspace();
+          }
         }
       } else if (/^[a-z]$/.test(key) && currentWord.length < MAX_WORD_LENGTH) {
         // Add a letter if it's alphabetic and we're under the max length
         currentWord += key.toUpperCase();
         updateInputDisplay();
         
-        // Play key press sound
-        safelyPlayTone(() => {
-          if (typeof Tone !== 'undefined') {
-            const synth = new Tone.Synth().toDestination();
-            synth.triggerAttackRelease('C4', '32n');
-          }
-        });
+        // Play enhanced keypress sound
+        if (window.VRdleAudio && window.VRdleAudio.ready) {
+          window.VRdleAudio.playKeypress();
+        }
       }
     });
 
@@ -438,7 +389,7 @@
         document.getElementById('main-directional-light').setAttribute('light', 'intensity', 1.2);
         document.getElementById('main-directional-light').setAttribute('light', 'color', '#fffaf0');
       } else {
-        // Let the backgroundButt component handle the dark themes
+        // Let the cycle function handle the dark themes
         return;
       }
       
@@ -454,13 +405,10 @@
         grid: 'none'
       });
       
-      // Play a theme change sound
-      safelyPlayTone(() => {
-        if (typeof Tone !== 'undefined') {
-          const synth = new Tone.PolySynth(Tone.Synth).toDestination();
-          synth.triggerAttackRelease(['C4', 'E4', 'G4'], '8n');
-        }
-      });
+      // Play enhanced theme change sound
+      if (window.VRdleAudio && window.VRdleAudio.ready) {
+        window.VRdleAudio.playThemeChange();
+      }
     }
 
     // Dark theme cycler
@@ -469,7 +417,113 @@
     
     function cycleDarkThemes() {
       const theme = darkThemes[currentDarkThemeIndex];
-      themeSwitch(theme);
+      
+      console.log("Switching to theme:", theme);
+      
+      // Apply the environment preset directly
+      const envEntity = document.querySelector('[environment]');
+      
+      if (!envEntity) {
+        console.error('No environment entity found');
+        return;
+      }
+      
+      // Special handling for problematic themes
+      if (theme === 'night') {
+        // Night theme - explicitly set more parameters to avoid white background issue
+        envEntity.setAttribute('environment', {
+          preset: 'night',
+          skyType: 'gradient',
+          skyColor: '#0d0d1a',
+          horizonColor: '#091034',
+          groundColor: '#020202',
+          groundColor2: '#020209',
+          shadow: true,
+          playArea: 1.5,
+          grid: 'none',
+          active: true
+        });
+      } else if (theme === 'starry') {
+        // Starry theme - explicitly set more parameters to avoid white background issue
+        envEntity.setAttribute('environment', {
+          preset: 'starry',
+          skyType: 'atmosphere',
+          skyColor: '#0d0d1a',
+          horizonColor: '#191970',
+          groundColor: '#0a0a0a',
+          groundColor2: '#0a0a14',
+          shadow: true,
+          playArea: 1.5,
+          grid: 'none',
+          active: true
+        });
+      } else {
+        // For other themes, just use the preset name
+        envEntity.setAttribute('environment', {
+          preset: theme,
+          shadow: true,
+          playArea: 1.5,
+          grid: 'none'
+        });
+      }
+      
+      // Adjust lighting based on the theme type
+      const ambientLight = document.getElementById('ambient-light');
+      const directionalLight = document.getElementById('main-directional-light');
+      
+      if (ambientLight && directionalLight) {
+        if (theme === 'night') {
+          // Darker lighting for night theme
+          ambientLight.setAttribute('light', {
+            color: '#0a1025',
+            intensity: 0.3
+          });
+          directionalLight.setAttribute('light', {
+            color: '#2c4073',
+            intensity: 0.5,
+            castShadow: true
+          });
+        } else if (theme === 'volcano') {
+          // Warmer lighting for volcano theme
+          ambientLight.setAttribute('light', {
+            color: '#ff8c7a',
+            intensity: 0.5
+          });
+          directionalLight.setAttribute('light', {
+            color: '#ffccaa',
+            intensity: 0.7,
+            castShadow: true
+          });
+        } else if (theme === 'starry') {
+          // Lighting for starry theme
+          ambientLight.setAttribute('light', {
+            color: '#b9d5ff',
+            intensity: 0.5
+          });
+          directionalLight.setAttribute('light', {
+            color: '#ffffff',
+            intensity: 0.8,
+            castShadow: true
+          });
+        } else {
+          // Default lighting for other themes
+          ambientLight.setAttribute('light', {
+            color: '#ffffff',
+            intensity: 0.5
+          });
+          directionalLight.setAttribute('light', {
+            color: '#ffffff',
+            intensity: 0.8,
+            castShadow: true
+          });
+        }
+      }
+      
+      // Play enhanced theme change sound
+      if (window.VRdleAudio && window.VRdleAudio.ready) {
+        window.VRdleAudio.playThemeChange();
+      }
+      
       // Update index for next click
       currentDarkThemeIndex = (currentDarkThemeIndex + 1) % darkThemes.length;
       
@@ -480,131 +534,6 @@
       setTimeout(() => {
         inputEl.setAttribute('troika-text', 'value', oldValue);
       }, 1500);
-    }
-
-    // Theme switching function - integrated here to avoid relying on external files
-    window.themeSwitch = function(themeName) {
-      console.log("Switching to theme:", themeName);
-      
-      // Theme definitions
-      const THEMES = {
-        starry: {
-          preset: 'starry',
-          skyColor: '#0d0d1a',
-          horizonColor: '#191970',
-          groundColor: '#0a0a0a',
-          groundColor2: '#0a0a14',
-          ambientLightColor: '#b9d5ff',
-          ambientLightIntensity: 0.5,
-          directionalLightColor: '#ffffff',
-          directionalLightIntensity: 0.8
-        },
-        night: {
-          preset: 'night',
-          skyColor: '#0d0d1a',
-          horizonColor: '#091034',
-          groundColor: '#020202',
-          groundColor2: '#020209',
-          ambientLightColor: '#0a1025',
-          ambientLightIntensity: 0.25,
-          directionalLightColor: '#2c4073',
-          directionalLightIntensity: 0.5
-        },
-        egypt: {
-          preset: 'egypt',
-          skyColor: '#8faed7',
-          horizonColor: '#d7b677',
-          groundColor: '#d7956b',
-          groundColor2: '#d88c5a',
-          ambientLightColor: '#fff2cc',
-          ambientLightIntensity: 0.5,
-          directionalLightColor: '#ffffe0',
-          directionalLightIntensity: 0.8
-        },
-        forest: {
-          preset: 'forest',
-          skyColor: '#91c4e2',
-          horizonColor: '#b4d2a8',
-          groundColor: '#4f6843',
-          groundColor2: '#2b3d26',
-          ambientLightColor: '#c9e6ca',
-          ambientLightIntensity: 0.5,
-          directionalLightColor: '#f5faf5',
-          directionalLightIntensity: 0.8
-        },
-        dream: {
-          preset: 'dream',
-          skyColor: '#c4a4ff',
-          horizonColor: '#ffd4e9',
-          groundColor: '#e3c3ff',
-          groundColor2: '#d4b4ff',
-          ambientLightColor: '#e7d8f5',
-          ambientLightIntensity: 0.5,
-          directionalLightColor: '#ffffff',
-          directionalLightIntensity: 0.8
-        },
-        volcano: {
-          preset: 'volcano',
-          skyColor: '#2a0d02',
-          horizonColor: '#4a1f09',
-          groundColor: '#432109',
-          groundColor2: '#341909',
-          ambientLightColor: '#ff8c7a',
-          ambientLightIntensity: 0.5,
-          directionalLightColor: '#ffccaa',
-          directionalLightIntensity: 0.7
-        }
-      };
-      
-      // Get theme settings or use starry as fallback
-      const theme = THEMES[themeName] || THEMES.starry;
-      const envEntity = document.querySelector('[environment]');
-      
-      if (!envEntity) {
-        console.error('No environment entity found');
-        return;
-      }
-      
-      // Apply environment settings
-      envEntity.setAttribute('environment', {
-        preset: theme.preset,
-        skyColor: theme.skyColor,
-        horizonColor: theme.horizonColor,
-        groundColor: theme.groundColor,
-        groundColor2: theme.groundColor2,
-        shadow: true,
-        playArea: 1.5,
-        grid: 'none'
-      });
-      
-      // Update lights
-      const ambientLight = document.getElementById('ambient-light');
-      const directionalLight = document.getElementById('main-directional-light');
-      
-      if (ambientLight) {
-        ambientLight.setAttribute('light', {
-          color: theme.ambientLightColor,
-          intensity: theme.ambientLightIntensity
-        });
-      }
-      
-      if (directionalLight) {
-        directionalLight.setAttribute('light', {
-          color: theme.directionalLightColor,
-          intensity: theme.directionalLightIntensity,
-          castShadow: true
-        });
-      }
-      
-      // Play theme change sound
-      safelyPlayTone(() => {
-        if (typeof Tone !== 'undefined') {
-          const synth = new Tone.Synth().toDestination();
-          synth.triggerAttackRelease('D4', '8n');
-        }
-      });
-      
-      return themeName;
     }
   </script>
 </body>
