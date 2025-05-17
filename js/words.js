@@ -5842,6 +5842,22 @@ const WORDS = [
 2. We then find the key with the same letter as the item's letter (which is the key's ID), then we find the parent of the key, which is the <a-keyboard-n> element, and then querySelectorAll returns an array of all the elements inside the keyboard element that have the id of the key's letter.
 3. We then set the key's material attribute to the background color from the item's color.
 4. We then set the key's color to black. */
+
+    // Helper to update the grid cells for the current row based on current input
+    function updateBoardInput() {
+        const rowEl = document.querySelector('#row' + selectedRow);
+        if (!rowEl) return;
+        const charEls = rowEl.querySelectorAll('.charDisplay');
+        // Clear all cells first
+        charEls.forEach(charEnt => {
+            charEnt.setAttribute('text-geometry', { value: '', size: 0.22, align: 'center' });
+        });
+        // Populate cells with current input letters
+        for (let i = 0; i < input.length && i < charEls.length; i++) {
+            charEls[i].setAttribute('text-geometry', { value: input[i], size: 0.22, align: 'center' });
+        }
+    }
+
     var input = ''
 
     function updateInput(e) {
@@ -5849,6 +5865,7 @@ const WORDS = [
         switch (code) {
             case 8:
                 input = input.slice(0, -1)
+                updateBoardInput()  // update grid on backspace
                 break
             case 06:
                 //check if input is a vaild word
@@ -5857,19 +5874,18 @@ const WORDS = [
                     processText(input)
                     if (input == wordOfTheDay) {
                         //if the word is the word of the day, tell the user they've won and stop them from typing
-                        keyboard.parentNode.removeChild(keyboard)
-                        document.querySelector('#victory').setAttribute('value', "You Win!")
+                        document.querySelector('#keyboard').parentNode.removeChild(document.querySelector('#keyboard'))
+                        document.querySelector('#victory').setAttribute('troika-text', `value: You Win!`)
                     }
                     //reset input
                     input = ''
-                    document.querySelector("#input").setAttribute("text-geometry", "value", input)
+                    // clear grid row after submission
+                    updateBoardInput()
+                    document.querySelector("#input").setAttribute("troika-text", `value: ${input}`)
                 } else {
                     //reset input and show error message
                     input = ''
-                    document.querySelector('#input').setAttribute('text-geometry', {
-                        value: "Not in word list",
-                        size: 0.2
-                    })
+                    document.querySelector('#input').setAttribute('troika-text', `value: Not in word list`)
                     document.querySelector('#input').setAttribute('material', {
                         color: "#f04",
                         metalness: 0.9,
@@ -5886,20 +5902,18 @@ const WORDS = [
             default:
                 if (input.length < 5) {
                     input = input + e.detail.value
+                    updateBoardInput()  // update grid on new letter
                 }
                 break
         }
-        //ensure text displays properly, and set text on input element
-        document.querySelector('#input').setAttribute('material', {
+        //ensure text displays properly, and set text on input display
+        const inputEl = document.querySelector('#input');
+        inputEl.setAttribute('material', {
             color: "gold", 
             metalness: 0.9, 
             emissive: "#222"
         })
-        
-        document.querySelector('#input').setAttribute('text-geometry', {
-            value: input,
-            size: 0.2
-        })
+        inputEl.setAttribute('troika-text', `value: ${input}`)
     }
     /* Here is the explanation for the code above:
 1. We're using a switch statement to determine what key the user has pressed.
